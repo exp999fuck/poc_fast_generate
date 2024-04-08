@@ -120,6 +120,7 @@ def main():
         for af_index, af_line in enumerate(afrog_yml):
             if args.name is not None:
                 afrog_yml[0] = f'id: {args.name}\n'
+                afrog_yml[2] = f'  name: {args.name}\n'
             if 'method:' in af_line:
                 afrog_yml[af_index] = f'      method: {method}\n'
             if 'path:' in af_line:
