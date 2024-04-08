@@ -1,0 +1,53 @@
+name:
+detail:
+  author: 
+  links:
+    - 
+  vulnerability:
+    level: critical
+    fofa-query: 
+    hunter-query: 
+    quake-query: 
+    zoomeye-query: 
+    threatbook-query: 
+    cve: 
+    tips: 
+
+transport: http
+set:
+    s1: randomInt(1000000000, 9000000000)
+    s2: randomLowercase(8)
+    s3: randomLowercase(8)
+    reverse: newReverse()
+    reverseURL: reverse.url
+    t1: timeConvert(now(), '2006-01-02')
+rules:
+  r0:
+    request:
+      method: 
+      path: 
+      follow_redirects: true
+      headers:
+      body:
+      
+    expression: response.status == 200
+
+    output:
+      search: |-
+        "(?P<rfile>\\w+.jsp)".bsubmatch(response.body)
+      rfile: search["rfile"]
+      search1: |-
+        "(?P<rdir>ico.*jsp)".bsubmatch(response.body)
+      rdir: search["rdir"]
+
+  r1:
+    request:
+      method: 
+      path: 
+      follow_redirects: true
+      headers:
+      body:
+
+    expression: response.status == 200
+    
+expression: r0() 

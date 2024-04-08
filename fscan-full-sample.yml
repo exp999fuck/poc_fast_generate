@@ -1,0 +1,13 @@
+name: short_sample
+set:
+  s1: randomInt(1000,9999)
+  s2: randomInt(10000,99999)
+groups:
+  rules1:  
+  - method: 
+    path: 
+    headers:
+    search:
+    followredirects: false
+    body: |
+    expression: response.status == 200
