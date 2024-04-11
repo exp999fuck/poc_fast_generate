@@ -68,26 +68,28 @@ def run_exe():
         print('ctrl +c 退出')
 
 def main():
-    with open('xray-full-sample.yml', encoding='utf-8') as f1, open('r.txt', encoding='utf-8') as f2, open('post.yml','w',encoding='utf-8') as f3,open('fscan-full-sample.yml',encoding='utf-8') as f4,open('get.yml','w',encoding='utf-8') as f5,open('afrog-full-sample.yml',encoding='utf-8') as f6,open('option.yml','w',encoding='utf-8') as f7:
+    with open('xray-full-sample.yml', encoding='utf-8') as f1, open('r.txt', encoding='utf-8') as f2, open('post.yml','w',encoding='utf-8') as f3,open('fscan-full-sample.yml',encoding='utf-8') as f4,open('get.yml','w',encoding='utf-8') as f5,open('afrog-full-sample.yml',encoding='utf-8') as f6,open('option.yml','w',encoding='utf-8') as f7,open('afrog-raw-sample.yml',encoding='utf-8')as f8:
         RED = '\033[91m'
         RESET = '\033[0m'
         a = argparse.ArgumentParser(RED + '-name   -follow   -type   -retext 都是必填项，切记\n' + RESET)
         a.add_argument('-name', dest='name', type=str, help='poc的名字', metavar='demo',required=True)
         a.add_argument('-follow', dest='follow', type=str, help='是否自动跟随，默认true', metavar='false',required=True)
-        a.add_argument('-type', dest='type', type=str,help='poc的类型-->(sqli,upload,read(/..2F..2Fetc2Fpasswd),unleak,xxe,head,200),200为判断返回包是否为200', metavar='sqli',required=True)
+        a.add_argument('-type', dest='type', type=str,help='poc的类型-->(sqli,upload,read(/..2F..2Fetc2Fpasswd),unleak,xxe,head,200,raw),200为判断返回包是否为200, raw 是afrog的形式，使用时其他默认200', metavar='sqli',required=True)
         a.add_argument('-r', dest='r', type=str, help='原始数据包文件，默认当前目录下的r.txt，不需要命令行指定txt', metavar='r.txt')
         a.add_argument('-retext',dest='retext',type=str,help='返回包body或者header里面匹配的内容',metavar='4ra1n',required=True)
         args = a.parse_args()
 
         one_lines = f2.readlines()
+        re_lines=[]
         header_data, body_data = split_header_body(one_lines) # 分离请求头 和  请求体
         header = get_headers(header_data) # 提取请求头
 
         method, path = get_top(one_lines[0]) # 获得请求方法和 path
 
         xray_yml = f1.readlines()  # xray_sample模板
-        fscan_yml = f4.readlines() # fscan_sample模板
-        afrog_yml = f6.readlines() # afrog_sample模板
+        fscan_yml = f4.readlines()  # fscan_sample模板
+        afrog_yml = f6.readlines()  # afrog_sample模板
+        afrog_raw_yml = f8.readlines()  # afrog_raw_sample模板
 ########################################################################################################################
         for f_index, f_line in enumerate(fscan_yml):
             if 'method:' in f_line:
@@ -105,7 +107,7 @@ def main():
                 fscan_yml[0] = f'name: {args.name}\n'
             if args.follow == 'false' and 'follow_redirects' in f_line:
                 fscan_yml[f_index] = f'      follow_redirects: {args.follow}\n'
-            if args.type in ['sqli', 'upload', 'read', 'unleak', '200'] and 'response.status' in f_line:
+            if args.type in ['sqli', 'upload', 'read', 'unleak', 'head','200'] and 'response.status' in f_line:
                 if args.type == 'sqli':
                     fscan_yml[f_index] = f'    expression: response.latency >= 6000 && response.status == 200 && response.body.bcontains(b"{args.retext}")\n'
                 if args.type == 'upload':
@@ -114,10 +116,14 @@ def main():
                     fscan_yml[f_index] = f'    expression: response.status == 200 && response.body.bcontains(b"{args.retext}")\n'
                 if args.type == 'unleak':
                     fscan_yml[f_index] = f'    expression: response.status == 200 && response.body.bcontains(b"{args.retext}")\n'
+                if args.type == 'head':
+                    fscan_yml[f_index] = f'    expression: response.status == 200 && response.content_type.contains("{args.retext}")\n'
                 if args.type == '200':
                     fscan_yml[f_index] = f'    expression: response.status == 200\n'
 ########################################################################################################################
         for af_index, af_line in enumerate(afrog_yml):
+            if args.type == 'raw':
+                break
             if args.name is not None:
                 afrog_yml[0] = f'id: {args.name}\n'
                 afrog_yml[2] = f'  name: {args.name}\n'
@@ -134,21 +140,33 @@ def main():
                 afrog_yml[af_index] = f'      body: "{body_data}"\n'
             if args.follow == 'false' and 'follow_redirects' in af_line:
                 afrog_yml[af_index] = f'      follow_redirects: {args.follow}\n'
-            if args.type in ['sqli', 'upload', 'read', 'unleak', 'xxe','head','200'] and 'response.status' in af_line:
+            if args.type in ['sqli', 'upload', 'read', 'unleak', 'xxe','head','200','raw'] and 'response.status' in af_line:
                 if args.type == 'sqli':
-                    afrog_yml[af_index] = f'    expression: response.latency >= 6000 && response.status == 500 &&  response.body.bcontains(b"{args.retext}")\n'
+                    afrog_yml[af_index] = f'    expression: response.latency >= 6000 && response.status == 500 &&  response.body.bcontains(b"{args.retext}") || response.body.ibcontains(b"{args.retext}")\n'
                 if args.type == 'upload':
-                    afrog_yml[af_index] = f'    expression: response.status == 200 && response.body.bcontains(b"{args.retext}")\n'
+                    afrog_yml[af_index] = f'    expression: response.status == 200 && response.body.bcontains(b"{args.retext}") || response.body.ibcontains(b"{args.retext}")\n'
                 if args.type == 'read':
                     afrog_yml[af_index] = f'    expression: response.status == 200 && "root:.*?:[0-9]*:[0-9]*:".bmatches(response.body)\n'
                 if args.type == 'unleak':
-                    afrog_yml[af_index] = f'    expression: response.status == 200 && response.body.bcontains(b"{args.retext}")\n'
+                    afrog_yml[af_index] = f'    expression: response.status == 200 && response.body.bcontains(b"{args.retext}")\n || response.body.ibcontains(b"{args.retext}")'
                 if args.type == 'xxe':
                     afrog_yml[af_index] = f'    expression: oobCheck(oob, oob.ProtocolHTTP, 3)\n'
                 if args.type == 'head':
-                    afrog_yml[af_index] = f'    expression: response.status == 200 && "set-cookie" in response.headers && response.headers["{args.retext}"].contains("JSESSIONID=")\n'
+                    afrog_yml[af_index] = f'    expression: response.content_type.contains("{args.type}") || response.raw_header.bcontains(b"{args.type}")\n'
                 if args.type == '200':
                     afrog_yml[af_index] = f'    expression: response.status == 200\n'
+        for index,line in enumerate(afrog_raw_yml):
+            if args.name is not None:
+                afrog_raw_yml[0] = f'id: {args.name}\n'
+                afrog_raw_yml[2] = f'  name: {args.name}\n'
+            if 'raw: |-' in line and args.type=='raw':
+                for i in one_lines:
+                    re_lines.append('        '+i.strip())
+                for re_host,host_line in enumerate(re_lines):
+                    if 'Host:' in host_line:
+                        re_lines[re_host]='        Host: {{hostname}}'
+                re_line='\n'.join(re_lines)
+                afrog_raw_yml[index]=f'      raw: |-\n{re_line}\n'
 ########################################################################################################################
         for x_index, x_line in enumerate(xray_yml):
             if 'method:' in x_line:
@@ -176,15 +194,17 @@ def main():
                 if args.type == 'unleak':
                     xray_yml[x_index] = f'    expression: response.status == 200 && response.body_string.contains("{args.retext}")\n'
                 if args.type == 'xxe':
+
                     xray_yml[x_index] = f'    expression: reverse.wait(5)\n'
                 if args.type == 'head':
-                    xray_yml[x_index] = f'    expression: response.status == 200 && "set-cookie" in response.headers && response.headers["{args.retext}"].contains("JSESSIONID=")\n'
+                    xray_yml[x_index] = f'    expression: response.status == 200 && "set-cookie" in response.headers && response.headers["{args.retext}"].contains("JSESSIONID=") && response.raw_header.bcontains(b"{args.retext}")\n'
                 if args.type == '200':
                     xray_yml[x_index] = f'    expression: response.status == 200\n'
 
         poc_yml = ''.join(xray_yml)
         fpoc_yml = ''.join(fscan_yml)
         afpoc_yml = ''.join(afrog_yml)
+        afpoc_raw_yml = ''.join(afrog_raw_yml)
 
         f3.write(poc_yml)
         print(poc_yml)
@@ -192,7 +212,8 @@ def main():
         f5.write(fpoc_yml)
         print(fpoc_yml)
         print('-------------fscan_poc-->get.yml----------------------\n')
-        f7.write(afpoc_yml)
+        f7.write(afpoc_yml+'\n')
+        f7.write(afpoc_raw_yml)
         print(afpoc_yml)
         print('-------------afrog_poc-->option.yml----------------------\n')
 
