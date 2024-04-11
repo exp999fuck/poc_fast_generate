@@ -148,25 +148,27 @@ def main():
                 if args.type == 'read':
                     afrog_yml[af_index] = f'    expression: response.status == 200 && "root:.*?:[0-9]*:[0-9]*:".bmatches(response.body)\n'
                 if args.type == 'unleak':
-                    afrog_yml[af_index] = f'    expression: response.status == 200 && response.body.bcontains(b"{args.retext}")\n || response.body.ibcontains(b"{args.retext}")'
+                    afrog_yml[af_index] = f'    expression: response.status == 200 && response.body.bcontains(b"{args.retext}") || response.body.ibcontains(b"{args.retext}")\n'
                 if args.type == 'xxe':
                     afrog_yml[af_index] = f'    expression: oobCheck(oob, oob.ProtocolHTTP, 3)\n'
                 if args.type == 'head':
                     afrog_yml[af_index] = f'    expression: response.content_type.contains("{args.type}") || response.raw_header.bcontains(b"{args.type}")\n'
                 if args.type == '200':
                     afrog_yml[af_index] = f'    expression: response.status == 200\n'
-        for index,line in enumerate(afrog_raw_yml):
-            if args.name is not None:
-                afrog_raw_yml[0] = f'id: {args.name}\n'
-                afrog_raw_yml[2] = f'  name: {args.name}\n'
-            if 'raw: |-' in line and args.type=='raw':
-                for i in one_lines:
-                    re_lines.append('        '+i.strip())
-                for re_host,host_line in enumerate(re_lines):
-                    if 'Host:' in host_line:
-                        re_lines[re_host]='        Host: {{hostname}}'
-                re_line='\n'.join(re_lines)
-                afrog_raw_yml[index]=f'      raw: |-\n{re_line}\n'
+        if args.type not in ['raw']:
+            afrog_raw_yml=''
+            for index,line in enumerate(afrog_raw_yml):
+                if args.name is not None:
+                    afrog_raw_yml[0] = f'id: {args.name}\n'
+                    afrog_raw_yml[2] = f'  name: {args.name}\n'
+                if 'raw: |-' in line and args.type=='raw':
+                    for i in one_lines:
+                        re_lines.append('        '+i.strip())
+                    for re_host,host_line in enumerate(re_lines):
+                        if 'Host:' in host_line:
+                            re_lines[re_host]='        Host: {{hostname}}'
+                    re_line='\n'.join(re_lines)
+                    afrog_raw_yml[index]=f'      raw: |-\n{re_line}\n'
 ########################################################################################################################
         for x_index, x_line in enumerate(xray_yml):
             if 'method:' in x_line:
