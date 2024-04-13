@@ -75,7 +75,7 @@ def main():
         a.add_argument('-follow', dest='follow', type=str, help='是否自动跟随，默认true', metavar='false',required=True)
         a.add_argument('-type', dest='type', type=str,help='poc的类型-->(sqli,upload,read(/..2F..2Fetc2Fpasswd),unleak,xxe,head,200,raw),200为判断返回包是否为200, raw 是afrog的形式，使用时其他默认200', metavar='sqli',required=True)
         a.add_argument('-r', dest='r', type=str, help='原始数据包文件，默认当前目录下的r.txt，不需要命令行指定txt', metavar='r.txt')
-        a.add_argument('-retext',dest='retext',type=str,help='返回包body或者header里面匹配的内容',metavar='4ra1n',required=True)
+        a.add_argument('-retext',dest='retext',type=str,help='返回包body或者header里面匹配的内容',metavar='fuckexp',required=True)
         args = a.parse_args()
 
         one_lines = f2.readlines()
