@@ -140,7 +140,7 @@ def main():
                 afrog_yml[af_index] = f'      body: "{body_data}"\n'
             if args.follow == 'false' and 'follow_redirects' in af_line:
                 afrog_yml[af_index] = f'      follow_redirects: {args.follow}\n'
-            if args.type in ['sqli', 'upload', 'read', 'unleak', 'xxe','head','200','raw'] and 'response.status' in af_line:
+            if args.type in ['sqli', 'upload', 'read', 'unleak', 'xxe','head','200'] and 'response.status' in af_line:
                 if args.type == 'sqli':
                     afrog_yml[af_index] = f'    expression: response.latency >= 6000 && response.status == 500 &&  response.body.bcontains(b"{args.retext}") || response.body.ibcontains(b"{args.retext}")\n'
                 if args.type == 'upload':
@@ -155,20 +155,19 @@ def main():
                     afrog_yml[af_index] = f'    expression: response.content_type.contains("{args.type}") || response.raw_header.bcontains(b"{args.type}")\n'
                 if args.type == '200':
                     afrog_yml[af_index] = f'    expression: response.status == 200\n'
-        if args.type not in ['raw']:
-            afrog_raw_yml=''
-            for index,line in enumerate(afrog_raw_yml):
+        if args.type =='raw':
+            for r_index,r_line in enumerate(afrog_raw_yml):
                 if args.name is not None:
                     afrog_raw_yml[0] = f'id: {args.name}\n'
                     afrog_raw_yml[2] = f'  name: {args.name}\n'
-                if 'raw: |-' in line and args.type=='raw':
+                if 'raw: |-' in r_line:
                     for i in one_lines:
                         re_lines.append('        '+i.strip())
                     for re_host,host_line in enumerate(re_lines):
                         if 'Host:' in host_line:
                             re_lines[re_host]='        Host: {{hostname}}'
                     re_line='\n'.join(re_lines)
-                    afrog_raw_yml[index]=f'      raw: |-\n{re_line}\n'
+                    afrog_raw_yml[r_index]=f'      raw: |-\n{re_line}\n'
 ########################################################################################################################
         for x_index, x_line in enumerate(xray_yml):
             if 'method:' in x_line:
@@ -216,7 +215,7 @@ def main():
         print('-------------fscan_poc-->get.yml----------------------\n')
         f7.write(afpoc_yml+'\n')
         f7.write(afpoc_raw_yml)
-        print(afpoc_yml)
+        print(afpoc_raw_yml)
         print('-------------afrog_poc-->option.yml----------------------\n')
 
     run_exe()
