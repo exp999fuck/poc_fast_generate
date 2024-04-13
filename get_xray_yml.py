@@ -49,7 +49,7 @@ def run_exe():
                 print(Fore.GREEN + f'===== 执行程序 {i} =====')
                 process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,creationflags=subprocess.CREATE_NO_WINDOW)
                 for byte_line in process.stdout:
-                    line = byte_line.decode('utf-8', errors='replace')  # 尝试使用utf-8解码，遇到无法解码的字符用问号替换
+                    line = byte_line.decode('utf-8', errors='replace')
                     print(Fore.GREEN + line, end='')
                 process.wait()
 
@@ -69,7 +69,7 @@ def main():
         RED = '\033[91m'
         RESET = '\033[0m'
         description = RED + '-name   -follow   -type   -retext 都是必填项，切记\n' + RESET
-        description += RED + "使用示例: python3 demo_yml.py -name fuck -type unleak -follow false -retext 123456" + RESET
+        description += RED + "使用示例: python3 demo_yml.py -name fuck -type unleak -follow false -retext 123456\n"+ RESET +'                                                      By: exp999fuck'
         a = argparse.ArgumentParser(description=description, formatter_class=argparse.RawDescriptionHelpFormatter,usage='-h')
         a.add_argument('-name', dest='name', type=str, help='poc的名字', metavar='demo',required=True)
         a.add_argument('-follow', dest='follow', type=str, help='是否自动跟随，默认true', metavar='false',required=True)
