@@ -8,7 +8,6 @@ def get_top(line):
     if line:
         return line.split()[0], line.split()[1]
 def split_header_body(lines):
-    # 如果在文本中没有空行来分割头部和主体，会导致 header 和 body 变量未定义而引发 UnboundLocalError 异常
     header = {}
     body = ''
     for index, line in enumerate(lines):
@@ -38,16 +37,14 @@ def run_exe():
 
     try:
         if re_url:
-            # 定义命令和参数列表
             commands = [
                 ['xray.exe', 'ws', '-p', 'post.yml', '-u'] + re_url,
                 ['fscan.exe', '-proxy', 'http://127.0.0.1:8080', '-pocpath', 'get.yml', '-u'] + re_url,
                 ['afrog.exe', '-proxy', 'http://127.0.0.1:8080', '-P', 'option.yml','-doh','-t'] + re_url
-                # 添加更多的可执行文件及参数
             ]
-            # xray.exe ws  -p post.yml -u https://61.132.38.122:4430
-            # fscan.exe -proxy http://127.0.0.1:8080 -pocpath get.yml -u https://61.132.38.122:4430
-            # afrog.exe -proxy http://127.0.0.1:8080  -P option.yml  -doh -t https://61.132.38.122:4430
+            # xray.exe ws  -p post.yml -u https://baidu.com
+            # fscan.exe -proxy http://127.0.0.1:8080 -pocpath get.yml -u https://baidu.com
+            # afrog.exe -proxy http://127.0.0.1:8080  -P option.yml  -doh -t https://baidu.com
             for i, command in enumerate(commands):
                 print(Fore.GREEN + f'===== 执行程序 {i} =====')
                 process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,creationflags=subprocess.CREATE_NO_WINDOW)
@@ -71,7 +68,9 @@ def main():
     with open('xray-full-sample.yml', encoding='utf-8') as f1, open('r.txt', encoding='utf-8') as f2, open('post.yml','w',encoding='utf-8') as f3,open('fscan-full-sample.yml',encoding='utf-8') as f4,open('get.yml','w',encoding='utf-8') as f5,open('afrog-full-sample.yml',encoding='utf-8') as f6,open('option.yml','w',encoding='utf-8') as f7,open('afrog-raw-sample.yml',encoding='utf-8')as f8:
         RED = '\033[91m'
         RESET = '\033[0m'
-        a = argparse.ArgumentParser(RED + '-name   -follow   -type   -retext 都是必填项，切记\n' + RESET)
+        description = RED + '-name   -follow   -type   -retext 都是必填项，切记\n' + RESET
+        description += RED + "使用示例: python3 demo_yml.py -name fuck -type unleak -follow false -retext 123456" + RESET
+        a = argparse.ArgumentParser(description=description, formatter_class=argparse.RawDescriptionHelpFormatter,usage='-h')
         a.add_argument('-name', dest='name', type=str, help='poc的名字', metavar='demo',required=True)
         a.add_argument('-follow', dest='follow', type=str, help='是否自动跟随，默认true', metavar='false',required=True)
         a.add_argument('-type', dest='type', type=str,help='poc的类型-->(sqli,upload,read(/..2F..2Fetc2Fpasswd),unleak,xxe,head,200,raw),200为判断返回包是否为200, raw 是afrog的形式，使用时其他默认200', metavar='sqli',required=True)
